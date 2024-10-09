@@ -1,0 +1,57 @@
+[initial_generation]
+cif_file = '/home/energy/mahpe/Playground/solid_state_NEB/NaFePO4_orthoromic_diffusion_y.traj' #'/home/energy/mahpe/CIF_files/Na2FeSiO4_silicate.cif' #NaMPO4_olivine.cif' #NaMPO4_olivine.cif'#Na2FeSiO4_silicate.cif'
+M_ion = 'Fe'
+symmertry_tol = 1e-3
+M_ion_list = ['Fe']#,'Mn','Co','Ni'] #['Ni','Co']#,'Co','Ni']
+deformation_dist = 0.004 
+
+Add_MD = false  #If we want all structures to have MD simulation(true) or not(false)
+full = true    # If we consider full M_ion structures(true) or with mixtures(false)
+mix_without_full = false     #If we only want to generate mixtures of M_ion(true) or not(false)
+four_M_ion_mix = false      #If we want to mix 4 structures without having pair mixtures
+min_conc = 1   #Minimum desodiation of the system. 1 means fully desodiation
+
+
+[VASP]
+xc = 'PBE'
+encut = 520
+sigma = 0.05
+ediff = 1e-06
+ediffg = -0.02
+algo = 'all'
+prec = 'accurate'
+ibrion = 2
+isif = 3
+ismear = 0
+ispin = 2
+nelmin = 8
+nelm = 300
+lmaxmix = 4
+nsw = 999
+lorbit = 12
+ncore = 4
+lcharg = true
+lreal = 'auto'
+ldau = true
+gamma = true
+lwave = true
+#istart = 0
+isym = 0
+symprec = 1e-7
+lasph=true
+time = 0.05
+command = 'mpirun vasp_std'
+setups = 'materialsproject'
+
+[MD_params]
+temperature = 1000
+friction_term = 0.003
+time_step = 1 #fs
+dump_step = 1 #fs
+print_step = 1
+max_step = 3000
+oszicar= true
+chgcar = true
+outcar = false
+procar = false
+max_unconverged = 100
