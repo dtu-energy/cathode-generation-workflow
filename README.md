@@ -19,4 +19,5 @@ As an example, use one of the four cif files provided. The NaMPO4_olivine/NaMPO4
 
 Note: 
 - Only VASP is used as the DFT calculator, but others can be added upon request
-- Only PO, SiO and SO is considered as anions in stable_calculation.py. Others can be added upon request
+- Only four cation (Fe, Mn, Co and Ni) are considered as possible dopants. Others can be added upon request
+- Only PO, SiO and SO are considered as anions in stable_calculation.py. Others can be added upon request
