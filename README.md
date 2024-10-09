@@ -15,6 +15,8 @@ When these changes are done you utilize the workflow using the command:
 ```
 python pq_submit.py
 ```
+As an example, use one of the four cif files provided. The NaMPO4_olivine/NaMPO4_maricite phasespace are the smallest and it is recommended to use either one of them.
+
 Note: 
 - Only VASP is used as the DFT calculator, but others can be added upon request
 - Only PO, SiO and SO is considered as anions in stable_calculation.py. Others can be added upon request
