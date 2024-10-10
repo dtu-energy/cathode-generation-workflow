@@ -23,5 +23,6 @@ Note:
 - Only PO, SiO and SO are considered as anions in stable_calculation.py. Others can be added upon request
 
 Aditionally, in 'Cluster_expansion/CE.ipynb' an example script to utilize Cluster Expansion to sample disordered cathode materials. For Cluster expansion sampling the 'Cluster_expansion/relax_ion.py' script is used to relax the structures and 'Cluster_expansion/md_sim.py' is used to perform Molecular dynamic simulations.
+
 Note:
 - This example only works for the alluadite structure in 'cif_files/Na2Fe2SO4.cif.
