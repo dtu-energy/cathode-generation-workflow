@@ -60,9 +60,9 @@ def main(run_path:str='.',**kwargs):
         params = toml.load(f)
     
     # Find the specific parameters for this relaxation using perqueue index
-    Job_name = list(params['Cheater_relax'].keys())[idx]
+    Job_name = list(params['Psudo_relax'].keys())[idx]
     args = get_arguments()
-    update_namespace(args, params['Cheater_relax'][Job_name])
+    update_namespace(args, params['Psudo_relax'][Job_name])
     print(Job_name,idx)
     # Import arguments
     M_ion = args.M_ion
@@ -79,7 +79,7 @@ def main(run_path:str='.',**kwargs):
 
     # setting and creating the directory for the saved files
     root_dir = params['root_dir']
-    relax_directory = f'{root_dir}/cheater_relax'
+    relax_directory = f'{root_dir}/psudo_relax'
     relaxsim_directory =f'{relax_directory}/{name}'
     try:
         os.makedirs(relaxsim_directory)

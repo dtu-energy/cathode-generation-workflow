@@ -5,8 +5,18 @@ from string import digits
 import weakref
 import shutil
 import os
+from ase.db import connect
+def get_magmom(M:str,redox:bool) -> int:
+    """
+    Get the magnetic moment of the metal ion
 
-def get_magmom(M,redox):
+    Args:
+        M (str): The metal ion
+        redox (bool): If the metal ion is in the redox state
+    
+    Returns:
+        int: The magnetic moment of the metal ion
+    """
     if M=='Fe':
         if redox == True:
             magmom = 5 # Fe3+
@@ -33,7 +43,17 @@ def get_magmom(M,redox):
         raise ValueError(f'Magmom is not known for {M}')
     return magmom
 
-def get_U_value(M):
+def get_U_value(M:str)-> float:
+    """ 
+    Get the U value for the metal ion
+    Ref: https://docs.materialsproject.org/methodology/materials-methodology/calculation-details/gga+u-calculations/hubbard-u-values
+
+    Args:
+        M (str): The metal ion
+
+    Returns:
+        float: The U value of the metal ion
+    """
     if M=='Mn':
         U_val =3.9
     elif M=='Fe':
@@ -46,44 +66,17 @@ def get_U_value(M):
         sys.exist(f'U value is not known for {M}')
     return U_val
 
-def get_tot_magmom(M_ion,n_M,n_Na):
-    if M_ion=='Mn':
-        mag_tot = 4*n_M +n_Na
-    elif M_ion=='Fe':
-        mag_tot = 5*n_M -n_Na
-    elif M_ion=='Ni':
-        mag_tot = 3*n_M -n_Na
-    elif M_ion=='Co':
-        mag_tot = 4*n_M -n_Na
-    else:
-        raise ValueError(f'Magmom is not known for {M_ion}')
-    return mag_tot
-def get_tot_magmom_silicate(M_ion,n_M,n_Na):
-        if M_ion=='Mn':
-            mag_tot = 4*n_M +n_Na-4
-        elif M_ion=='Fe':
-            mag_tot = 5*n_M -n_Na+4
-        elif M_ion=='Ni':
-            mag_tot = 3*n_M -n_Na+4
-        elif M_ion=='Co':
-            mag_tot = 4*n_M -n_Na+4
-        else:
-            sys.exit(f'Magmom is not known for {M_ion}')
-        return mag_tot
-def get_tot_magmom_alluadite(M_ion,n_M,n_Na):
-        if M_ion=='Mn':
-            mag_tot = 4*n_M +n_Na-3
-        elif M_ion=='Fe':
-            mag_tot = 5*n_M -n_Na+3
-        elif M_ion=='Ni':
-            mag_tot = 3*n_M -n_Na+3
-        elif M_ion=='Co':
-            mag_tot = 4*n_M -n_Na+3
-        else:
-            sys.exit(f'Magmom is not known for {M_ion}')
-        return mag_tot
+def redox_sort(metal_ion:str)->int:
+    """
+    Sort the metal ion based on where the redox will happen first
 
-def redox_sort(metal_ion):
+    Args:
+        metal_ion (str): The metal ion
+    
+    Returns:
+        int: The index of the metal ion
+
+    """
     # sort function based on where the redox will happen first
     # This sort knowlegde is based on their voltage profile
     if metal_ion =='Fe':
@@ -97,7 +90,16 @@ def redox_sort(metal_ion):
     else:
         raise ValueError(f'Redox_sort is not known for {metal_ion}')
 
-def redox_combination(M_ion_list_str,number_redox):
+def redox_combination(M_ion_list_str:list,number_redox:int)-> list:
+    """
+    Sort the metal ion based on where the redox will happen first
+
+    Args:
+        M_ion_list_str (list): The list of metal ions
+        number_redox (int): The number of redox reactions
+    returns:
+        list: The combination of the redox reactions
+    """
     # Sort the M_ion after where the redox will happen
     sorted_list = M_ion_list_str.copy()
     sorted_list.sort(key=redox_sort)
@@ -107,8 +109,16 @@ def redox_combination(M_ion_list_str,number_redox):
         combi_list.append(list(np.argwhere(np.array(M_ion_list_str)==M_ion_redox).T[0]))
     return list(set([tuple(sorted(k)) for k in itertools.product(*combi_list ) if len(tuple(set(k))) == len(k)]))
 
-def redox_cheater(metal_ion):
-    # Give each of the metal ion their own redox atom
+def redox_psudo(metal_ion:str)-> str:
+    """
+    Give each of the metal ion their own redox atom
+
+    Args:
+        metal_ion (str): The metal ion
+
+    Returns:
+        str: The redox atom
+    """
     if metal_ion =='Fe':
         return 'Ga'
     elif metal_ion == 'Mn':
@@ -120,7 +130,16 @@ def redox_cheater(metal_ion):
     else:
         raise ValueError(f'Redox_sort is not known for {metal_ion}')
 
-def remove_redox_cheater(metal_ion):
+def remove_redox_psudo(metal_ion:str) -> str:
+    """
+    Remove the redox atom
+
+    Args:
+        metal_ion (str): The metal ion
+    
+    Returns:
+        str: The metal ion
+    """
     # Give each of the metal ion their own redox atom
     if metal_ion =='Ga':
         return 'Fe'
@@ -133,7 +152,17 @@ def remove_redox_cheater(metal_ion):
     else:
         raise ValueError(f'Redox_sort is not known for {metal_ion}')
 
-def redox_cheater_replacement(metal_ion):
+def redox_psudo_replacement(metal_ion:str)-> str:
+    """
+    Replace the redox atom with Ga
+
+    Args:
+        metal_ion (str): The metal ion
+    
+    Returns:
+        str: The metal ion
+    """
+
     # Replace the redox atom such that they are all Ga
     if metal_ion =='In':
         return 'Ga'
@@ -144,14 +173,23 @@ def redox_cheater_replacement(metal_ion):
     else:
         return metal_ion
 
-def create_name_atom(atom_formula):
+def create_name_atom(atom_formula:str)-> str:
+    """
+    Create a name for the atom based on the ase database formula
+
+    Args:
+        atom_formula (str): The formula of the atom
+    
+    Returns:
+        str: The name of the atom
+    """
     # create name for the atom based on ase db formula
     # Remove digits from name
     #remove_digits = str.maketrans('', '', digits)
     #a_name = atom_formula.translate(remove_digits)
     #Keep the digits
     a_name = atom_formula
-    # Remove cheaters
+    # Remove psudos
     a_name = a_name.replace('Ga','Fe')
     a_name = a_name.replace('In','Mn')
     a_name = a_name.replace('Ti','Ni')
@@ -161,13 +199,27 @@ def create_name_atom(atom_formula):
     a_name = a_name.replace('Na','')
     a_name = 'Na'+a_name
     return a_name
+
+
 def create_name_db(database_row,m_metal_list):
+    """
+    Create a name for the atom based on the ase database formula
+
+    Args:
+        database_row (ase.db.row): The row of the database  
+        m_metal_list (list): The list of metal ions 
+
+    Returns:
+        str: The name of the atom
+
+    """
+
     # create name for the atom based on ase db formula
     # Remove digits from name
     atom_formula = database_row.formula
     remove_digits = str.maketrans('', '', digits)
     a_name = atom_formula.translate(remove_digits)
-    # Remove cheaters
+    # Remove psudos
     a_name = a_name.replace('Ga','')
     a_name = a_name.replace('In','')
     a_name = a_name.replace('Ti','')
@@ -180,57 +232,6 @@ def create_name_db(database_row,m_metal_list):
         a_name = m_str+a_name
     a_name = 'Na'+a_name
     return a_name
-
-def get_Na_index(atoms):
-    Na_index = [a.index for a in atoms if a.symbol == 'Na']
-    return Na_index
-def get_M_index(atoms):
-    M_index = [a.index for a in atoms if a.symbol != 'O' and a.symbol != 'Na' and a.symbol != 'P' and a.symbol != 'S' and a.symbol != 'Si']
-    return M_index
-def redox_sort_func(x):
-    if isinstance(x,tuple):
-        x = x[0]
-    if x == 'Fe':
-        return 1
-    elif x == 'Mn':
-        return 2
-    elif x == 'Co':
-        return 3
-    elif x == 'Ni':
-        return 4
-    elif x == 'Na':
-        return 5
-    else:
-        return 10
-def formula_sort_func(x):
-    if isinstance(x,tuple):
-        x = x[0]
-    if x == 'Na':
-        return 0
-    if x == 'Fe':
-        return 1
-    if x == 'Mn':
-        return 2
-    if x == 'Co':
-        return 3
-    if x == 'Ni':
-        return 4
-    if x == 'O':
-        return 10
-    if x == 'P':
-        return 5
-    if x == 'S':
-        return 7
-    if x == 'Si':
-        return 8
-def sort(atoms, tags=None,key=None):
-    if tags is None:
-        tags = atoms.get_chemical_symbols()
-    else:
-        tags = list(tags)
-    deco = sorted([(tag, i) for i, tag in enumerate(tags)],key=key)
-    indices = [i for tag, i in deco]
-    return atoms[indices], indices
 
 class MD_Saver():
     def __init__(self, dyn, calc,nelm,max_unconverged=100, oszicar=True,procar=False,chgcar=False,outcar=False, root_dir="chgcars",scratch_dir="chgcars",backup_name="mart"):

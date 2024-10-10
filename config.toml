@@ -1,8 +1,9 @@
 [initial_generation]
-cif_file = '/home/energy/mahpe/Playground/solid_state_NEB/NaFePO4_orthoromic_diffusion_y.traj' #'/home/energy/mahpe/CIF_files/Na2FeSiO4_silicate.cif' #NaMPO4_olivine.cif' #NaMPO4_olivine.cif'#Na2FeSiO4_silicate.cif'
-M_ion = 'Fe'
+cif_file = 'cif_files/NaMPO4_olivine.cif'
+M_ion_cif = 'Fe' # The tranistion metal ion in the cif file
+ion_cif = 'Na' # The moving atom in the cif and assume it is the same as the one to consider
 symmertry_tol = 1e-3
-M_ion_list = ['Fe']#,'Mn','Co','Ni'] #['Ni','Co']#,'Co','Ni']
+M_ion_list = ['Fe','Mn'] # The transition metal ions to consider
 deformation_dist = 0.004 
 
 Add_MD = false  #If we want all structures to have MD simulation(true) or not(false)

@@ -24,6 +24,7 @@ def main(run_path:str ='.',db_dir:str ='.',MD_run:bool = False,**kwargs):
     
     # Load the database
     root_dir = params['root_dir']
+    ion = params['initial_generation']['ion_cif']
     db = connect(db_dir)
 
     # Create a dictionary with the lowest energy structure for each composition
@@ -36,22 +37,22 @@ def main(run_path:str ='.',db_dir:str ='.',MD_run:bool = False,**kwargs):
         atoms = row.toatoms()
 
         # Initialize the dictionary for this concentration if it does not exist
-        if sum(atoms.symbols=='Na') not in structure_database.keys():
-            structure_database[sum(atoms.symbols=='Na')] = {}
+        if sum(atoms.symbols==ion) not in structure_database.keys():
+            structure_database[sum(atoms.symbols==ion)] = {}
 
         # Get the chemical formula without anion
-        formula_config = ''.join((atoms.get_chemical_symbols())).replace('Na','')
+        formula_config = ''.join((atoms.get_chemical_symbols())).replace(ion,'')
         formula_config = formula_config.replace('O','')
         formula_config = formula_config.replace('P','')
         formula_config = formula_config.replace('Si','')
         formula_config = formula_config.replace('S','')
     
         # Add the structure to the database if it is not already there
-        if formula_config not in structure_database[sum(atoms.symbols=='Na')].keys():
-            structure_database[sum(atoms.symbols=='Na')][formula_config] = {'ID': row.id, 'atoms': atoms,'symbols':atoms.symbols,'energy':atoms.get_potential_energy()}
+        if formula_config not in structure_database[sum(atoms.symbols==ion)].keys():
+            structure_database[sum(atoms.symbols==ion)][formula_config] = {'ID': row.id, 'atoms': atoms,'symbols':atoms.symbols,'energy':atoms.get_potential_energy()}
         else: # If it is there compare the energies and keep the lowest one
-            if atoms.get_potential_energy() < structure_database[sum(atoms.symbols=='Na')][formula_config]['energy']:
-                structure_database[sum(atoms.symbols=='Na')][formula_config] = {'ID': row.id, 'atoms': atoms,'symbols':atoms.symbols,'energy':atoms.get_potential_energy()}
+            if atoms.get_potential_energy() < structure_database[sum(atoms.symbols==ion)][formula_config]['energy']:
+                structure_database[sum(atoms.symbols==ion)][formula_config] = {'ID': row.id, 'atoms': atoms,'symbols':atoms.symbols,'energy':atoms.get_potential_energy()}
 
     Na_tot = np.max([k for k in structure_database.keys()])
 
@@ -62,13 +63,13 @@ def main(run_path:str ='.',db_dir:str ='.',MD_run:bool = False,**kwargs):
     for key in structure_database.keys():
         structures = list(structure_database[key])
         structures.sort()
-        print('Na concentration: ',key/Na_tot, 'Number of structures: ',len(structures),'   ',structures )
+        print('Ion concentration: ',key/Na_tot, 'Number of structures: ',len(structures),'   ',structures )
         assert structures == structures_prev
         for config_key in structure_database[key].keys():
             struc = structure_database[key][config_key]
             row_i = db.get(id=struc['ID'])
             params['MD'][row_i.name] = {'db_ids':row_i.ids,'M_ion': params['Relax'][row_i.name]['M_ion'], 'db_dir': db_dir }
-    params['MD']['resource'] = {'nodename':'xeon40','tmax':'50h','cores':40}
+
     with open(cfg, "w") as toml_file:
         toml.dump(params, toml_file)
     

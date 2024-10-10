@@ -20,22 +20,21 @@ import shutil
 from distutils.dir_util import copy_tree
 import time
 import sys
-sys.path.append('/home/energy/mahpe/Structure_generation')
 from chemical_values import*
 from typing import Tuple, Dict, Any
 from perqueue.constants import DYNAMICWIDTHGROUP_KEY
 
-def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full:bool,
+def main(cif_file:str, M_ion_cif:str,ion_cif:str, symmertry_tol:int, full:bool, mix_without_full:bool,
           min_conc:bool, four_M_ion_mix:bool, M_ion_list:list, deformation_dist:float,
-          Add_MD:bool,cfg_name:str = 'config.toml',root_dir:str = '/home/energy/mahpe') -> Tuple[bool, Dict[str, Any]]:
+          Add_MD:bool,cfg_name:str = 'config.toml',root_dir:str = '.') -> Tuple[bool, Dict[str, Any]]:
     
     # Read the unit cell for the fully sodiated system
     unit_cell = read(cif_file)
 
     # Generate all possible structures based on the sodiation level
     # Set up nessery values
-    Na_indice = [a.index for a in unit_cell if a.symbol == 'Na']
-    Na_tot = len(Na_indice)
+    ion_indice = [a.index for a in unit_cell if a.symbol == ion_cif]
+    ion_tot = len(ion_indice)
 
     # Defining the main folder from the zif file and metal ions
     Folder_name = cif_file.split('/')[-1][:-4]
@@ -62,16 +61,18 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
     if not full:
         M_ion_mix_list = M_ion_list
     else:
-        M_ion_mix_list = [M_ion]
+        M_ion_mix_list = [M_ion_cif]
     
     # Find the M_ion indices and make the system full of M_ion
-    M_indice = [a.index for a in unit_cell if a.symbol == M_ion]
+    M_indice = [a.index for a in unit_cell if a.symbol == M_ion_cif]
     
     # makes the full system for M_ion
-    if M_ion != M_ion_mix_list[0]:
+    if M_ion_cif != M_ion_mix_list[0]:
         for ind in M_indice:
             unit_cell.symbols[ind] = M_ion_mix_list[0]
         M_ion = M_ion_mix_list[0]
+    else:
+        M_ion = M_ion_cif
     
     atom_mixture_list = [unit_cell.copy()] # add the fully M_ion structure
     
@@ -93,6 +94,7 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
                     atom_mixture_list.append(atom_new)
     print('Number of structures generated:',len(atom_mixture_list))
     print(atom_mixture_list)
+
     # Remove the fully structures if we only consider mixtures
     if not full:
         remove_ind = []
@@ -118,19 +120,19 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
     # Loop over all sodiation levels for each of the mixture ion structures:
     for atom_mix in atom_mixture_list:
         print(atom_mix.symbols)
-        for Na_rm in range(Na_tot+1):
+        for ion_rm in range(ion_tot+1):
             count = 0
-            if Na_rm == 0: # Fully Sodiated
-                db.write(atom_mix,Na_rm=Na_rm,data = {'Ga_convergence': {}})
+            if ion_rm == 0: # Fully Sodiated
+                db.write(atom_mix,ion_rm=ion_rm,data = {'Ga_convergence': {}})
                 continue
-            if Na_rm/Na_tot > min_conc:
+            if ion_rm/ion_tot > min_conc:
                 continue
             # Combination list of different index to be removed
-            Na_rm_list = list(itertools.combinations(Na_indice, r=Na_rm))
-            print(f'Number of Na removed: {Na_rm}')
-            #print(f'Na index to be removed: {Na_rm_list}')
+            ion_rm_list = list(itertools.combinations(ion_indice, r=ion_rm))
+            print(f'Number of Na removed: {ion_rm}')
+            #print(f'Na index to be removed: {ion_rm_list}')
             # Loop over the different combination 
-            for del_list in Na_rm_list:
+            for del_list in ion_rm_list:
                 # Delete the Na atoms and set vaccancy
                 atom_0 = atom_mix.copy()
                 del_list = list(del_list) # need to sort the index before del atoms, to aviod index problems deleting M instead of Na
@@ -139,16 +141,16 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
                     atom_0.symbols[del_idx] = 'X'
         
                 #  Find M indices and replace it by Ga
-                Ga_add_list = redox_combination(list(atom_0.symbols[M_indice]),Na_rm)
+                Ga_add_list = redox_combination(list(atom_0.symbols[M_indice]),ion_rm)
                 #print(Ga_add_list)
                 for Ga_add in Ga_add_list:
                     atom_1 = atom_0.copy()
                     M_ion_to_Ga = {}
                     for i, Ga_ind in enumerate(Ga_add):
                         M_ion_to_Ga[i] = atom_1.symbols[M_indice[Ga_ind]]## IMPORTANT this convergence only works if the redox indicies are sorted (low->high) and when you rm a atom with ASE the atom order do not change 
-                        atom_1.symbols[M_indice[Ga_ind]] = redox_cheater(M_ion_to_Ga[i])
+                        atom_1.symbols[M_indice[Ga_ind]] = redox_psudo(M_ion_to_Ga[i])
                     # Write the total structure with removed Na and added redox (Ga)
-                    db.write(atom_1, Na_rm=Na_rm,data = {'Ga_convergence': M_ion_to_Ga} )
+                    db.write(atom_1, ion_rm=ion_rm,data = {'Ga_convergence': M_ion_to_Ga} )
                     count+=1
             print(f'Number of structures created: {count}')
     tot_len_db = len(db)
@@ -162,10 +164,10 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
     not_sym_atoms_tot = []
     print('Symmertry check')
     # Loop over all sodium levels
-    for Na_rm in tqdm(range(int(Na_tot*min_conc)+1)): 
+    for ion_rm in tqdm(range(int(ion_tot*min_conc)+1)): 
         # Loop over all atoms for this sodium level:
-        atoms = [row.toatoms() for row in db.select([('Na_rm','=',str(Na_rm))]) ]
-        ids =[row.id for row in db.select([('Na_rm','=',str(Na_rm))]) ]
+        atoms = [row.toatoms() for row in db.select([('ion_rm','=',str(ion_rm))]) ]
+        ids =[row.id for row in db.select([('ion_rm','=',str(ion_rm))]) ]
         not_sym_atoms = []
         not_sym_id = []
         for i in range(len(atoms)):
@@ -214,17 +216,17 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
             remove_digits = str.maketrans('', '', digits)
             atom_name = str(db.get(id=1).toatoms().symbols).translate(remove_digits)
             atom_name = atom_name.replace(M_ion,M_ion_i)
-            if os.path.exists(f'{Folder_dir}/{atom_name}_cheater_structures.db'):
-                os.remove(f'{Folder_dir}/{atom_name}_cheater_structures.db')
-            db_new = connect(f'{Folder_dir}/{atom_name}_cheater_structures.db')
-            db_list.append(f'{Folder_dir}/{atom_name}_cheater_structures.db')
+            if os.path.exists(f'{Folder_dir}/{atom_name}_psudo_structures.db'):
+                os.remove(f'{Folder_dir}/{atom_name}_psudo_structures.db')
+            db_new = connect(f'{Folder_dir}/{atom_name}_psudo_structures.db')
+            db_list.append(f'{Folder_dir}/{atom_name}_psudo_structures.db')
             print(f'Create structures for: {atom_name}')
         else:
             atom_name = create_name_db(db.get(id=1),M_ion_mix_list)
-            if os.path.exists(f'{Folder_dir}/{atom_name}_mix_cheater_structures.db'):
-                os.remove(f'{Folder_dir}/{atom_name}_mix_cheater_structures.db')
-            db_new = connect(f'{Folder_dir}/{atom_name}_mix_cheater_structures.db')
-            db_list.append(f'{Folder_dir}/{atom_name}_mix_cheater_structures.db')
+            if os.path.exists(f'{Folder_dir}/{atom_name}_mix_psudo_structures.db'):
+                os.remove(f'{Folder_dir}/{atom_name}_mix_psudo_structures.db')
+            db_new = connect(f'{Folder_dir}/{atom_name}_mix_psudo_structures.db')
+            db_list.append(f'{Folder_dir}/{atom_name}_mix_psudo_structures.db')
 
         # Loop over sym. equivarient structures
         index = 0
@@ -237,7 +239,7 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
                 if full and atom.symbols[ind] == M_ion: 
                     atom.symbols[ind] = M_ion_i
                 M_ion_old = atom.symbols[ind]
-                atom.symbols[ind] = redox_cheater_replacement(M_ion_old) # remove the "fake" cheaters if any
+                atom.symbols[ind] = redox_psudo_replacement(M_ion_old) # remove the "fake" psudos if any
                 M_ion_new = atom.symbols[ind]
                 atom[ind].magmom = get_magmom(M_ion_new,redox=False)
             # Assume that there are 6 oxygen close to the Metal ion
@@ -263,19 +265,19 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
                     new_Ga_convergence[key] = M_ion_i
                 
                 db_new.write(atom,ids = str(index)+'_'+str(atom.symbols),ids_old=str(row.id)+'_'+str(row.toatoms().symbols),name=create_name_atom(row.formula),
-                         conc=(1-row.Na_rm)/Na_tot, data = {'Ga_convergence': new_Ga_convergence})
+                         conc=(1-row.ion_rm)/ion_tot, data = {'Ga_convergence': new_Ga_convergence})
             else:
                 db_new.write(atom,ids = str(index)+'_'+str(atom.symbols),ids_old=str(row.id)+'_'+str(row.toatoms().symbols),name=create_name_atom(row.formula),
-                         conc=(1-row.Na_rm)/Na_tot, data = {'Ga_convergence': row.data.Ga_convergence})
+                         conc=(1-row.ion_rm)/ion_tot, data = {'Ga_convergence': row.data.Ga_convergence})
             index += 1
     
     # Generate the workflow used for relaxation and perform MD
     # write toml file
     data = {}
     if Add_MD == True:
-        list_scripts = ['Cheater_relax','Relax','MD']
+        list_scripts = ['Psudo_relax','Relax','MD']
     else:
-        list_scripts = ['Cheater_relax','Relax']
+        list_scripts = ['Psudo_relax','Relax']
     # set the toml for each of the script we want to run
     for script in list_scripts:
         data[script] = {}
@@ -289,20 +291,15 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
                     name_split = name.split('_')
                     name_split.insert(1,M_ion_list[i])
                     name = '_'.join(name_split) 
-                    if script == 'Cheater_relax':
+                    if script == 'Psudo_relax':
                         data[script][name] = {'db_dir': db_name, 'db_ids':row.ids,'M_ion':M_ion_list[i]}
                     else:
                         data[script][name] = {'db_ids':row.ids,'M_ion':M_ion_list[i]}
                 elif not full:
-                    if script == 'Cheater_relax':
+                    if script == 'Psudo_relax':
                         data[script][name] = {'db_dir': db_name, 'db_ids':row.ids,'db_ids_old':row.ids_old,'M_ion':M_ion_mix_list}
                     else:
                         data[script][name] = {'db_ids':row.ids,'M_ion':M_ion_mix_list}
-        # Set resources 
-        data[script]['resource'] = {'nodename':'xeon40el8','tmax':'50h','cores':40}
-    # Set stable calculation if not all relaxations needs an MD
-    if Add_MD != True:
-        data['Stable'] = {'resource': {'nodename':'xeon24el8','tmax':'1h','cores':16}}
     
     # Copy the config file and add the new data
     with open(cfg_name, 'r') as f:
@@ -317,7 +314,7 @@ def main(cif_file:str, M_ion:str, symmertry_tol:int, full:bool, mix_without_full
 
     
     # Return the dynamic width group key and the run path
-    dmkey = len(data['Cheater_relax'])-1 # should not include the resource key
+    dmkey = len(data['Psudo_relax'])-1 # should not include the resource key
     return_parameters = {DYNAMICWIDTHGROUP_KEY: dmkey, 'run_path': Folder_dir}
     return True , return_parameters
 
