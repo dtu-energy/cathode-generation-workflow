@@ -1,0 +1,43 @@
+[VASP]
+xc = 'PBE'
+encut = 520
+sigma = 0.05
+ediff = 1e-06
+ediffg = -0.02
+algo = 'all'
+prec = 'accurate'
+ibrion = 2
+isif = 3
+ismear = 0
+ispin = 2
+nelmin = 8
+nelm = 300
+lmaxmix = 4
+nsw = 999
+lorbit = 12
+ncore = 4
+lcharg = true
+lreal = 'auto'
+ldau = true
+gamma = true
+lwave = true
+#istart = 0
+isym = 0
+symprec = 1e-7
+lasph=true
+time = 0.05
+command = 'mpirun vasp_std'
+setups = 'materialsproject'
+
+[MD_params]
+temperature = 1000
+friction_term = 0.003
+time_step = 1 #fs
+dump_step = 1 #fs
+print_step = 1
+max_step = 3000
+oszicar= true
+chgcar = true
+outcar = false
+procar = false
+max_unconverged = 100
