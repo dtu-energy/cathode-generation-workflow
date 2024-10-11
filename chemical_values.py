@@ -8,7 +8,16 @@ import os
 from ase.db import connect
 def get_magmom(M:str,redox:bool) -> int:
     """
-    Get the magnetic moment of the metal ion
+    Get the magnetic moment of the metal ion. Following mapping is used:
+        Fe -> 4 (Fe2+)
+        Mn -> 5 (Mn2+)
+        Ni -> 2 (Ni2+)
+        Co -> 3 (Co2+)
+        Ga -> 0
+        Fe -> 5 (Fe3+)
+        Mn -> 4 (Mn3+)
+        Ni -> 3 (Ni3+)
+        Co -> 4 (Co3+)
 
     Args:
         M (str): The metal ion
@@ -47,7 +56,12 @@ def get_U_value(M:str)-> float:
     """ 
     Get the U value for the metal ion
     Ref: https://docs.materialsproject.org/methodology/materials-methodology/calculation-details/gga+u-calculations/hubbard-u-values
-
+    Following mapping is used:
+        Fe -> 5.3
+        Mn -> 3.9
+        Ni -> 6.2
+        Co -> 3.32
+    
     Args:
         M (str): The metal ion
 
@@ -63,12 +77,17 @@ def get_U_value(M:str)-> float:
     elif M=='Co':
         U_val=3.32
     else:
-        sys.exist(f'U value is not known for {M}')
+        raise ValueError(f'U value is not known for {M}')
     return U_val
 
 def redox_sort(metal_ion:str)->int:
     """
-    Sort the metal ion based on where the redox will happen first
+    Sort the metal ion based on where the redox will happen first.
+    Following redox order is used:
+        Fe -> 0
+        Mn -> 1
+        Co -> 2
+        Ni -> 3
 
     Args:
         metal_ion (str): The metal ion
@@ -112,6 +131,11 @@ def redox_combination(M_ion_list_str:list,number_redox:int)-> list:
 def redox_psudo(metal_ion:str)-> str:
     """
     Give each of the metal ion their own redox atom
+    Following mapping is used:
+        Fe -> Ga
+        Mn -> In
+        Ni -> Ti
+        Co -> Al
 
     Args:
         metal_ion (str): The metal ion
@@ -132,7 +156,12 @@ def redox_psudo(metal_ion:str)-> str:
 
 def remove_redox_psudo(metal_ion:str) -> str:
     """
-    Remove the redox atom
+    Remove the redox atom.
+    Following mapping is used:
+        Ga -> Fe
+        In -> Mn
+        Ti -> Ni
+        Al -> Co
 
     Args:
         metal_ion (str): The metal ion
@@ -154,7 +183,7 @@ def remove_redox_psudo(metal_ion:str) -> str:
 
 def redox_psudo_replacement(metal_ion:str)-> str:
     """
-    Replace the redox atom with Ga
+    Replace the redox atom with Ga for all metal ions
 
     Args:
         metal_ion (str): The metal ion

@@ -3,9 +3,18 @@
 This workflow generates combinatorial all possible atomic configurations a specific battery cathode material and perform Denisty Functional Theory (DFT) calculation on them as well as perform Molecular dynamic (MD) simulations on them.
 
 The workflow diagram is vizualized below, using Na ion cathode materials as an example:
-
+![plot](workflow.jpg)
 
 This workflow is utilized with PerQueue and one need to install PerQueue, MyQueue, ASE, toml, itertools and have a python enviorment with a python version of 3.11 or newer. This is also presented in the requirment.txt
+To intall required packages:
+```bash
+pip install -r requirement.txt
+```
+
+Afterwards PerQueue needs to be initialized before running the workflow:
+```bash
+pq init
+```
 
 To run the workflow you need to:
 - Change the input paramters in config.toml. All settings for the workflow is set in config.toml, including the cathode material cif file to consider
