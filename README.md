@@ -31,7 +31,7 @@ Note:
 - Only four cation (Fe, Mn, Co and Ni) are considered as possible dopants. Others can be added upon request
 - Only PO, SiO and SO are considered as anions in stable_calculation.py. Others can be added upon request
 
-Aditionally, in 'Cluster_expansion/CE.ipynb' an example script to utilize Cluster Expansion to sample disordered cathode materials. For Cluster expansion sampling the 'Cluster_expansion/relax_ion.py' script is used to relax the structures and 'Cluster_expansion/md_sim.py' is used to perform Molecular dynamic simulations.
+Aditionally, in 'Random_sampling/Random.ipynb' we present an example script to random sample cathode materials with substitutions disorder, where Na and metal ions can swap positions. For randdom sampling the 'Random_sampling/relax_ion.py' script is used to relax the structures and 'Random_sampling/md_sim.py' is used to perform Molecular dynamic simulations.
 
 Note:
-- This example only works for the alluadite structure. To get the specific cif file one need to download it from ICSD. The ID is 243842. When downloaded rename the cif to 'Na2Fe2SO4.cif' and add it to the '/cif_file' folder.
+- This random sample example only works for the alluadite structure. To get the specific cif file one need to download it from ICSD. The ID is 243842. When downloaded rename the cif to 'Na2Fe2SO4.cif' and add it to the '/cif_file' folder.
