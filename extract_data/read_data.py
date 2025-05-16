@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Set the datafile path
-data_file = '/home/energy/mahpe/Playground/Universal_FF/Dataset/Published/NaMPO4_olivine_multiple.xyz'
+data_file = 'NaMPO4_olivine_single_total.xyz'
 
 # Load all the structures 
 all_structures = read(data_file, index=':')
